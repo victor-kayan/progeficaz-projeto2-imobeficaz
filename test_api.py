@@ -111,3 +111,49 @@ def test_busca_imovel_inexistente(mock_connect_db, client):
     # Then
     assert response.status_code == 404
     assert response.get_json() == {"erro": "Imóvel não encontrado"}
+
+
+@patch("api.connect_db")
+def test_adiciona_novo_imovel(mock_connect_db, client):
+    # Given
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_conn.cursor.return_value = mock_cursor
+    mock_connect_db.return_value = mock_conn
+    mock_cursor.lastrowid = 1001
+    novo_imovel = {
+        "logradouro": "Rua das Flores",
+        "tipo_logradouro": "Rua",
+        "bairro": "Centro",
+        "cidade": "São Paulo",
+        "cep": "01001-000",
+        "tipo": "apartamento",
+        "valor": 500000.0,
+        "data_aquisicao": "2026-09-16",
+    }
+
+    # When
+    response = client.post("/imoveis", json=novo_imovel)
+
+    # Then
+    assert response.status_code == 201
+    assert response.get_json() == {
+        "mensagem": "Imóvel criado com sucesso",
+        "id": 1001,
+    }
+    mock_cursor.execute.assert_called_once_with(
+        "INSERT INTO imoveis "
+        "(logradouro, tipo_logradouro, bairro, cidade, cep, tipo, valor, "
+        "data_aquisicao) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+        (
+            "Rua das Flores",
+            "Rua",
+            "Centro",
+            "São Paulo",
+            "01001-000",
+            "apartamento",
+            500000.0,
+            "2026-09-16",
+        ),
+    )
+    mock_conn.commit.assert_called_once()
