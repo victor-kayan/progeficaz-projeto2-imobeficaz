@@ -187,4 +187,4 @@ curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:5000/imoveis
 curl http://SEU_IP_PUBLICO/
 ```
 
-**URL pública:** será incluída após o deploy na AWS.
+**URL pública:** [http://54.172.144.227/](http://54.172.144.227/)
