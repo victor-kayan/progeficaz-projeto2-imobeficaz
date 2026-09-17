@@ -12,6 +12,31 @@ def client():
         yield client
 
 
+def test_raiz_apresenta_links_da_api(client):
+    # When
+    response = client.get("/")
+
+    # Then
+    assert response.status_code == 200
+    assert response.get_json() == {
+        "nome": "ImobEficaz API",
+        "_links": {
+            "imoveis": {"href": "/imoveis", "method": "GET"},
+            "criar_imovel": {"href": "/imoveis", "method": "POST"},
+            "buscar_por_tipo": {
+                "href": "/imoveis/tipo/{tipo}",
+                "method": "GET",
+                "templated": True,
+            },
+            "buscar_por_cidade": {
+                "href": "/imoveis/cidade/{cidade}",
+                "method": "GET",
+                "templated": True,
+            },
+        },
+    }
+
+
 @patch("api.connect_db")
 def test_lista_todos_os_imoveis(mock_connect_db, client):
     # Given
@@ -50,6 +75,12 @@ def test_lista_todos_os_imoveis(mock_connect_db, client):
                 "tipo": "casa em condominio",
                 "valor": 488423.52,
                 "data_aquisicao": "2017-07-29",
+                "_links": {
+                    "self": {"href": "/imoveis/1", "method": "GET"},
+                    "colecao": {"href": "/imoveis", "method": "GET"},
+                    "atualizar": {"href": "/imoveis/1", "method": "PUT"},
+                    "remover": {"href": "/imoveis/1", "method": "DELETE"},
+                },
             }
         ]
     }
@@ -90,6 +121,12 @@ def test_busca_imovel_por_id(mock_connect_db, client):
         "tipo": "casa em condominio",
         "valor": 488423.52,
         "data_aquisicao": "2017-07-29",
+        "_links": {
+            "self": {"href": "/imoveis/1", "method": "GET"},
+            "colecao": {"href": "/imoveis", "method": "GET"},
+            "atualizar": {"href": "/imoveis/1", "method": "PUT"},
+            "remover": {"href": "/imoveis/1", "method": "DELETE"},
+        },
     }
     mock_cursor.execute.assert_called_once_with(
         "SELECT * FROM imoveis WHERE id = %s", (1,)
