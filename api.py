@@ -137,6 +137,34 @@ def remover_imovel(imovel_id):
     return "", 204
 
 
+@app.route("/imoveis/tipo/<tipo>", methods=["GET"])
+def buscar_imoveis_por_tipo(tipo):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM imoveis WHERE tipo = %s", (tipo,))
+    registros = cursor.fetchall()
+    imoveis = [formatar_imovel(registro) for registro in registros]
+
+    cursor.close()
+    conn.close()
+
+    return jsonify({"imoveis": imoveis}), 200
+
+
+@app.route("/imoveis/cidade/<cidade>", methods=["GET"])
+def buscar_imoveis_por_cidade(cidade):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM imoveis WHERE cidade = %s", (cidade,))
+    registros = cursor.fetchall()
+    imoveis = [formatar_imovel(registro) for registro in registros]
+
+    cursor.close()
+    conn.close()
+
+    return jsonify({"imoveis": imoveis}), 200
+
+
 @app.route("/imoveis/<int:imovel_id>", methods=["GET"])
 def buscar_imovel(imovel_id):
     conn = connect_db()
