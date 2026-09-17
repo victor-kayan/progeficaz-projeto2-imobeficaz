@@ -245,3 +245,63 @@ def test_atualiza_imovel_inexistente(mock_connect_db, client):
     # Then
     assert response.status_code == 404
     assert response.get_json() == {"erro": "Imóvel não encontrado"}
+
+
+@pytest.mark.parametrize(
+    "dados_incompletos",
+    [
+        {"cidade": "São Paulo"},
+        {"logradouro": "Avenida Paulista"},
+    ],
+)
+@patch("api.connect_db")
+def test_atualiza_imovel_sem_campos_obrigatorios(
+    mock_connect_db, client, dados_incompletos
+):
+    # When
+    response = client.put("/imoveis/1", json=dados_incompletos)
+
+    # Then
+    assert response.status_code == 400
+    assert response.get_json() == {
+        "erro": "Logradouro e cidade são obrigatórios"
+    }
+    mock_connect_db.assert_not_called()
+
+
+@patch("api.connect_db")
+def test_remove_imovel(mock_connect_db, client):
+    # Given
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_conn.cursor.return_value = mock_cursor
+    mock_connect_db.return_value = mock_conn
+    mock_cursor.rowcount = 1
+
+    # When
+    response = client.delete("/imoveis/1")
+
+    # Then
+    assert response.status_code == 204
+    assert response.data == b""
+    mock_cursor.execute.assert_called_once_with(
+        "DELETE FROM imoveis WHERE id = %s", (1,)
+    )
+    mock_conn.commit.assert_called_once()
+
+
+@patch("api.connect_db")
+def test_remove_imovel_inexistente(mock_connect_db, client):
+    # Given
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_conn.cursor.return_value = mock_cursor
+    mock_connect_db.return_value = mock_conn
+    mock_cursor.rowcount = 0
+
+    # When
+    response = client.delete("/imoveis/9999")
+
+    # Then
+    assert response.status_code == 404
+    assert response.get_json() == {"erro": "Imóvel não encontrado"}
