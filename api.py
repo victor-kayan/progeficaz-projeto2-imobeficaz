@@ -56,6 +56,9 @@ def buscar_imovel(imovel_id):
     cursor.close()
     conn.close()
 
+    if registro is None:
+        return jsonify({"erro": "Imóvel não encontrado"}), 404
+
     return jsonify(formatar_imovel(registro)), 200
 
 
