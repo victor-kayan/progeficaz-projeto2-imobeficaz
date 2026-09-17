@@ -157,3 +157,26 @@ def test_adiciona_novo_imovel(mock_connect_db, client):
         ),
     )
     mock_conn.commit.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "dados_incompletos",
+    [
+        {"cidade": "São Paulo"},
+        {"logradouro": "Rua das Flores"},
+    ],
+)
+@patch("api.connect_db")
+def test_adiciona_imovel_sem_campos_obrigatorios(
+    mock_connect_db, client, dados_incompletos
+):
+    # Given
+    mensagem_esperada = {"erro": "Logradouro e cidade são obrigatórios"}
+
+    # When
+    response = client.post("/imoveis", json=dados_incompletos)
+
+    # Then
+    assert response.status_code == 400
+    assert response.get_json() == mensagem_esperada
+    mock_connect_db.assert_not_called()
