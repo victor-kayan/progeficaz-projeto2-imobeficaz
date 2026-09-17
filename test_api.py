@@ -305,3 +305,52 @@ def test_remove_imovel_inexistente(mock_connect_db, client):
     # Then
     assert response.status_code == 404
     assert response.get_json() == {"erro": "Imóvel não encontrado"}
+
+
+@pytest.mark.parametrize(
+    "rota, query, valor",
+    [
+        (
+            "/imoveis/tipo/apartamento",
+            "SELECT * FROM imoveis WHERE tipo = %s",
+            "apartamento",
+        ),
+        (
+            "/imoveis/cidade/São Paulo",
+            "SELECT * FROM imoveis WHERE cidade = %s",
+            "São Paulo",
+        ),
+    ],
+)
+@patch("api.connect_db")
+def test_busca_imoveis_por_tipo_e_cidade(
+    mock_connect_db, client, rota, query, valor
+):
+    # Given
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_conn.cursor.return_value = mock_cursor
+    mock_connect_db.return_value = mock_conn
+    mock_cursor.fetchall.return_value = [
+        (
+            1,
+            "Avenida Paulista",
+            "Avenida",
+            "Bela Vista",
+            "São Paulo",
+            "01310-100",
+            "apartamento",
+            750000.0,
+            "2026-09-16",
+        )
+    ]
+
+    # When
+    response = client.get(rota)
+
+    # Then
+    assert response.status_code == 200
+    assert response.get_json()["imoveis"][0]["id"] == 1
+    assert response.get_json()["imoveis"][0]["tipo"] == "apartamento"
+    assert response.get_json()["imoveis"][0]["cidade"] == "São Paulo"
+    mock_cursor.execute.assert_called_once_with(query, (valor,))
