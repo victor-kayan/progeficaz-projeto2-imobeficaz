@@ -84,6 +84,10 @@ def adicionar_imovel():
 @app.route("/imoveis/<int:imovel_id>", methods=["PUT"])
 def atualizar_imovel(imovel_id):
     dados = request.get_json()
+
+    if not dados.get("logradouro") or not dados.get("cidade"):
+        return jsonify({"erro": "Logradouro e cidade são obrigatórios"}), 400
+
     valores = (
         dados["logradouro"],
         dados.get("tipo_logradouro"),
@@ -114,6 +118,23 @@ def atualizar_imovel(imovel_id):
         return jsonify({"erro": "Imóvel não encontrado"}), 404
 
     return jsonify({"mensagem": "Imóvel atualizado com sucesso"}), 200
+
+
+@app.route("/imoveis/<int:imovel_id>", methods=["DELETE"])
+def remover_imovel(imovel_id):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM imoveis WHERE id = %s", (imovel_id,))
+    conn.commit()
+    imovel_removido = cursor.rowcount > 0
+
+    cursor.close()
+    conn.close()
+
+    if not imovel_removido:
+        return jsonify({"erro": "Imóvel não encontrado"}), 404
+
+    return "", 204
 
 
 @app.route("/imoveis/<int:imovel_id>", methods=["GET"])
