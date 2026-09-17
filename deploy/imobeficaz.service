@@ -1,0 +1,14 @@
+[Unit]
+Description=Gunicorn para a API ImobEficaz
+After=network.target
+
+[Service]
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/progeficaz-projeto2-imobeficaz
+EnvironmentFile=/etc/imobeficaz.env
+ExecStart=/home/ubuntu/progeficaz-projeto2-imobeficaz/.venv/bin/gunicorn --workers 3 --bind 127.0.0.1:5000 api:app
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
