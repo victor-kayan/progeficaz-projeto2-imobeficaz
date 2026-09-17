@@ -7,6 +7,29 @@ from flask import Flask, jsonify, request
 app = Flask(__name__)
 
 
+@app.route("/", methods=["GET"])
+def inicio():
+    return jsonify(
+        {
+            "nome": "ImobEficaz API",
+            "_links": {
+                "imoveis": {"href": "/imoveis", "method": "GET"},
+                "criar_imovel": {"href": "/imoveis", "method": "POST"},
+                "buscar_por_tipo": {
+                    "href": "/imoveis/tipo/{tipo}",
+                    "method": "GET",
+                    "templated": True,
+                },
+                "buscar_por_cidade": {
+                    "href": "/imoveis/cidade/{cidade}",
+                    "method": "GET",
+                    "templated": True,
+                },
+            },
+        }
+    ), 200
+
+
 def connect_db():
     return mysql.connector.connect(
         host=os.getenv("DB_HOST"),
@@ -18,8 +41,10 @@ def connect_db():
 
 
 def formatar_imovel(registro):
+    imovel_id = registro[0]
+
     return {
-        "id": registro[0],
+        "id": imovel_id,
         "logradouro": registro[1],
         "tipo_logradouro": registro[2],
         "bairro": registro[3],
@@ -28,6 +53,12 @@ def formatar_imovel(registro):
         "tipo": registro[6],
         "valor": registro[7],
         "data_aquisicao": registro[8],
+        "_links": {
+            "self": {"href": f"/imoveis/{imovel_id}", "method": "GET"},
+            "colecao": {"href": "/imoveis", "method": "GET"},
+            "atualizar": {"href": f"/imoveis/{imovel_id}", "method": "PUT"},
+            "remover": {"href": f"/imoveis/{imovel_id}", "method": "DELETE"},
+        },
     }
 
 
