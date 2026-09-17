@@ -177,7 +177,12 @@ def test_adiciona_novo_imovel(mock_connect_db, client):
     assert response.get_json() == {
         "mensagem": "Imóvel criado com sucesso",
         "id": 1001,
+        "_links": {
+            "self": {"href": "/imoveis/1001", "method": "GET"},
+            "colecao": {"href": "/imoveis", "method": "GET"},
+        },
     }
+    assert response.headers["Location"] == "/imoveis/1001"
     mock_cursor.execute.assert_called_once_with(
         "INSERT INTO imoveis "
         "(logradouro, tipo_logradouro, bairro, cidade, cep, tipo, valor, "
@@ -243,7 +248,13 @@ def test_atualiza_imovel(mock_connect_db, client):
 
     # Then
     assert response.status_code == 200
-    assert response.get_json() == {"mensagem": "Imóvel atualizado com sucesso"}
+    assert response.get_json() == {
+        "mensagem": "Imóvel atualizado com sucesso",
+        "_links": {
+            "self": {"href": "/imoveis/1", "method": "GET"},
+            "colecao": {"href": "/imoveis", "method": "GET"},
+        },
+    }
     mock_cursor.execute.assert_called_once_with(
         "UPDATE imoveis SET logradouro = %s, tipo_logradouro = %s, "
         "bairro = %s, cidade = %s, cep = %s, tipo = %s, valor = %s, "
@@ -391,3 +402,28 @@ def test_busca_imoveis_por_tipo_e_cidade(
     assert response.get_json()["imoveis"][0]["tipo"] == "apartamento"
     assert response.get_json()["imoveis"][0]["cidade"] == "São Paulo"
     mock_cursor.execute.assert_called_once_with(query, (valor,))
+
+
+@pytest.mark.parametrize(
+    "metodo, rota",
+    [
+        ("POST", "/imoveis"),
+        ("PUT", "/imoveis/1"),
+    ],
+)
+@patch("api.connect_db")
+def test_rejeita_corpo_json_nulo(mock_connect_db, client, metodo, rota):
+    # When
+    response = client.open(
+        rota,
+        method=metodo,
+        data="null",
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.get_json() == {
+        "erro": "Logradouro e cidade são obrigatórios"
+    }
+    mock_connect_db.assert_not_called()
