@@ -105,9 +105,13 @@ def atualizar_imovel(imovel_id):
         valores,
     )
     conn.commit()
+    imovel_atualizado = cursor.rowcount > 0
 
     cursor.close()
     conn.close()
+
+    if not imovel_atualizado:
+        return jsonify({"erro": "Imóvel não encontrado"}), 404
 
     return jsonify({"mensagem": "Imóvel atualizado com sucesso"}), 200
 
