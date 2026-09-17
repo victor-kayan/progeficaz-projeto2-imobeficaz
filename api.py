@@ -1,7 +1,7 @@
 import os
 
 import mysql.connector
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 
 
 app = Flask(__name__)
@@ -44,6 +44,37 @@ def listar_imoveis():
     conn.close()
 
     return jsonify({"imoveis": imoveis}), 200
+
+
+@app.route("/imoveis", methods=["POST"])
+def adicionar_imovel():
+    dados = request.get_json()
+    valores = (
+        dados["logradouro"],
+        dados.get("tipo_logradouro"),
+        dados.get("bairro"),
+        dados["cidade"],
+        dados.get("cep"),
+        dados.get("tipo"),
+        dados.get("valor"),
+        dados.get("data_aquisicao"),
+    )
+
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO imoveis "
+        "(logradouro, tipo_logradouro, bairro, cidade, cep, tipo, valor, "
+        "data_aquisicao) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+        valores,
+    )
+    conn.commit()
+    imovel_id = cursor.lastrowid
+
+    cursor.close()
+    conn.close()
+
+    return jsonify({"mensagem": "Imóvel criado com sucesso", "id": imovel_id}), 201
 
 
 @app.route("/imoveis/<int:imovel_id>", methods=["GET"])
