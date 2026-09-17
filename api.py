@@ -81,6 +81,37 @@ def adicionar_imovel():
     return jsonify({"mensagem": "Imóvel criado com sucesso", "id": imovel_id}), 201
 
 
+@app.route("/imoveis/<int:imovel_id>", methods=["PUT"])
+def atualizar_imovel(imovel_id):
+    dados = request.get_json()
+    valores = (
+        dados["logradouro"],
+        dados.get("tipo_logradouro"),
+        dados.get("bairro"),
+        dados["cidade"],
+        dados.get("cep"),
+        dados.get("tipo"),
+        dados.get("valor"),
+        dados.get("data_aquisicao"),
+        imovel_id,
+    )
+
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE imoveis SET logradouro = %s, tipo_logradouro = %s, "
+        "bairro = %s, cidade = %s, cep = %s, tipo = %s, valor = %s, "
+        "data_aquisicao = %s WHERE id = %s",
+        valores,
+    )
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return jsonify({"mensagem": "Imóvel atualizado com sucesso"}), 200
+
+
 @app.route("/imoveis/<int:imovel_id>", methods=["GET"])
 def buscar_imovel(imovel_id):
     conn = connect_db()
