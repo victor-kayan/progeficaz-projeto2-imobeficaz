@@ -81,7 +81,7 @@ def listar_imoveis():
 def adicionar_imovel():
     dados = request.get_json()
 
-    if not dados.get("logradouro") or not dados.get("cidade"):
+    if not dados or not dados.get("logradouro") or not dados.get("cidade"):
         return jsonify({"erro": "Logradouro e cidade são obrigatórios"}), 400
 
     valores = (
@@ -109,14 +109,27 @@ def adicionar_imovel():
     cursor.close()
     conn.close()
 
-    return jsonify({"mensagem": "Imóvel criado com sucesso", "id": imovel_id}), 201
+    return (
+        jsonify(
+            {
+                "mensagem": "Imóvel criado com sucesso",
+                "id": imovel_id,
+                "_links": {
+                    "self": {"href": f"/imoveis/{imovel_id}", "method": "GET"},
+                    "colecao": {"href": "/imoveis", "method": "GET"},
+                },
+            }
+        ),
+        201,
+        {"Location": f"/imoveis/{imovel_id}"},
+    )
 
 
 @app.route("/imoveis/<int:imovel_id>", methods=["PUT"])
 def atualizar_imovel(imovel_id):
     dados = request.get_json()
 
-    if not dados.get("logradouro") or not dados.get("cidade"):
+    if not dados or not dados.get("logradouro") or not dados.get("cidade"):
         return jsonify({"erro": "Logradouro e cidade são obrigatórios"}), 400
 
     valores = (
@@ -148,7 +161,15 @@ def atualizar_imovel(imovel_id):
     if not imovel_atualizado:
         return jsonify({"erro": "Imóvel não encontrado"}), 404
 
-    return jsonify({"mensagem": "Imóvel atualizado com sucesso"}), 200
+    return jsonify(
+        {
+            "mensagem": "Imóvel atualizado com sucesso",
+            "_links": {
+                "self": {"href": f"/imoveis/{imovel_id}", "method": "GET"},
+                "colecao": {"href": "/imoveis", "method": "GET"},
+            },
+        }
+    ), 200
 
 
 @app.route("/imoveis/<int:imovel_id>", methods=["DELETE"])
