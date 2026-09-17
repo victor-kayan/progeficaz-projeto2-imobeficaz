@@ -49,6 +49,10 @@ def listar_imoveis():
 @app.route("/imoveis", methods=["POST"])
 def adicionar_imovel():
     dados = request.get_json()
+
+    if not dados.get("logradouro") or not dados.get("cidade"):
+        return jsonify({"erro": "Logradouro e cidade são obrigatórios"}), 400
+
     valores = (
         dados["logradouro"],
         dados.get("tipo_logradouro"),
