@@ -224,3 +224,24 @@ def test_atualiza_imovel(mock_connect_db, client):
         ),
     )
     mock_conn.commit.assert_called_once()
+
+
+@patch("api.connect_db")
+def test_atualiza_imovel_inexistente(mock_connect_db, client):
+    # Given
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_conn.cursor.return_value = mock_cursor
+    mock_connect_db.return_value = mock_conn
+    mock_cursor.rowcount = 0
+    dados_atualizados = {
+        "logradouro": "Avenida Paulista",
+        "cidade": "São Paulo",
+    }
+
+    # When
+    response = client.put("/imoveis/9999", json=dados_atualizados)
+
+    # Then
+    assert response.status_code == 404
+    assert response.get_json() == {"erro": "Imóvel não encontrado"}
